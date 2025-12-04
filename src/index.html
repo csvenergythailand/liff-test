@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LIFF Login Test</title>
+</head>
+<body>
+    <div>
+        <span id="loadingMessage">Loading...</span>
+
+        <div id="lineProfile" style="display: none;">
+            <img id="profilePicture" width="100px" src="https://fastly.picsum.photos/id/885/100/100.jpg?hmac=TnefxktnHwOpg30Wb29PGL3zw6AcAKr9QLJPaMHupYk">
+            <div id="displayName">Hello Name</div>
+            <div id="userId">UID: Your UID</div>
+
+            <div>
+                <input id="lineMessage" type="text">
+                <button onclick="sendMessage()">Send message</button>
+            </div>
+        </div>
+        
+        <div id="errorMessage" style="display: none; color: red;"></div>
+        <button id="logoutButton" onclick="logout()">Logout</button>
+    </div>
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/versions/2.22.3/sdk.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.1/axios.min.js" integrity="sha512-m9S8W3a9hhBHPFAbEIaG7J9P92dzcAWwM42VvJp5n1/M599ldK6Z2st2SfJGsX0QR4LfCVr681vyU5vW8d218w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+        const correctLiffId = '2008549814-JgNRpDdX'; 
+        
+        const loadingMessage = document.getElementById('loadingMessage');
+        const profileDiv = document.getElementById('lineProfile');
+        const errorMessage = document.getElementById('errorMessage');
+
+        let userId = ''; 
+
+        const logout = () => {
+            liff.logout(); 
+            window.location.reload(); 
+        }
+
+        const sendMessage = async () => {
+            const lineMessageInput = document.getElementById('lineMessage'); 
+            const messageText = lineMessageInput ? lineMessageInput.value : '';
+
+            if (!messageText) {
+                alert("กรุณากรอกข้อความ");
+                return;
+            }
+
+            if (!liff.isLoggedIn()) {
+                alert("กรุณา Login ก่อนส่งข้อความ");
+                return;
+            }
+
+            console.log(`Sending message: "${messageText}" to User ID: ${userId}`); 
+            
+            try {
+                const profile = await liff.getProfile();
+                const currentUserId = profile.userId; 
+            
+                const backendUrl = 'https://carotidal-atomically-tama.ngrok-free.dev/send-message'; 
+                
+                const response = await fetch(backendUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        userId: currentUserId, 
+                        message: messageText 
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    alert('✅ ส่งข้อความสำเร็จ! (โปรดตรวจสอบ LINE)');
+                    console.log('API Response:', data);
+                    lineMessageInput.value = ''; 
+                } else {
+                    const errorData = await response.json();
+                    alert(`❌ การส่งข้อความล้มเหลว: ${errorData.message || response.statusText}`);
+                    console.error('API Error:', errorData);
+                }
+
+            } catch (error) {
+                alert('⚠️ ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ Backend ได้ หรือเกิดข้อผิดพลาดในการส่งข้อความ');
+                console.error('Fetch/Processing Error:', error);
+            }
+        }
+
+        const main = async () => {
+            try { 
+                await liff.init({ liffId: correctLiffId });
+                
+                if (!liff.isLoggedIn()) {
+                    liff.login(); 
+                    return; 
+                }
+
+                const profile = await liff.getProfile();
+                console.log('Login สำเร็จ', profile);
+
+                loadingMessage.style.display = 'none';
+                profileDiv.style.display = 'block';
+
+                document.getElementById('profilePicture').src = profile.pictureUrl;
+                document.getElementById('displayName').textContent = `Hello ${profile.displayName}`;
+                document.getElementById('userId').textContent = `UID: ${profile.userId}`;
+                userId = profile.userId; 
+                
+            } catch (error) {
+                
+                loadingMessage.style.display = 'none';
+                errorMessage.textContent = `เกิดข้อผิดพลาดในการเริ่มต้น LIFF: ${error.message}`;
+                errorMessage.style.display = 'block';
+                console.error('LIFF Init Failed', error);
+            }
+        }
+
+        main();
+    </script>
+</body>
+</html>

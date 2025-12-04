@@ -1,0 +1,24 @@
+{
+  "name": "liff-exp",
+  "version": "1.0.0",
+  "description": "My LIFF experiment project",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon server.js",
+    "client": "py -3 -m http.server --directory src 8000",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "liff"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@line/liff": "^2.27.3",
+    "axios": "^1.13.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "nodemon": "^3.1.11"
+  }
+}
