@@ -5,10 +5,18 @@
       "runtime": "@vercel/node"
     }
   },
-  "rewrites": [
+  "routes": [
     {
-      "source": "/(.*)",
-      "destination": "/server.js"
+      "src": "/webhook",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/send-message",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/src/index.html" 
     }
   ]
 }
